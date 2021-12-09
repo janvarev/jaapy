@@ -1,6 +1,7 @@
 # Jaa.py
 
 Jaa.py - minimalistic one-file plugin framework with no dependencies.
+All you need is root file "jaa.py"
 
 **Main functions:**
 - run all plugins files from "plugins" folder, base on filename
@@ -24,6 +25,8 @@ updated when plugin change "version"
 
 **- Example usage:**
 ```
+from jaa import JaaCore
+
 class VoiceAssCore(JaaCore): # class must override JaaCore
     def __init__(self):
         JaaCore.__init__(self)
