@@ -46,14 +46,15 @@ import os
 import traceback
 import json
 
-version = "1.4"
+version = "1.5"
 
 class JaaCore:
     def __init__(self):
-        self.jaaOptionsPath = "options"
+
         self.jaaPluginPrefix = "plugin_"
         self.jaaVersion = version
         self.jaaRootFolder = os.path.dirname(__file__)
+        self.jaaOptionsPath = self.jaaRootFolder+os.path.sep+"options"
         print("JAA.PY v{0} class created!".format(version))
 
     # ------------- plugins -----------------
