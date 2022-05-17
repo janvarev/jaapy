@@ -3,28 +3,42 @@
 **Jaa.py** - minimalistic one-file plugin framework with no dependencies.
 All you need is root file "jaa.py"
 
-#### Main functions
-- run all plugins files from "plugins" folder, based on filename (Plugin filename must start with "plugin_")
-- save plugin options in "options" folder in JSON text files for further editing
+[Continue in English](/README.EN.md)
 
-Must be in root folder due to plugin path calculation
+**Jaa.py** - минималистичный однофайловый плагинный фреймворк без зависимостей.
+Нужен только корневой файл "jaa.py"
 
-### Plugins
-* must located in plugins/ folder
-* (usually) must start with "plugin_" prefix
-* must have "start(core)" function, that returns manifest dict
-* manifest must contain keys "name" and "version"
-* manifest can contain "default_options"
-  * if contain - options will be saved in "options" folder, are editable, and will load next time
-  * if contain - "start_with_options(core,manifest)" function will run with manifest with "options" key
-* manifest will be processed in "core.process_plugin_manifest" function. If you wanna - override it
 
-### Options (for plugins)
-* are saved under "options" folder in JSON format
-* created at first run plugin with "default_options"
-* updated when plugin change "version"
+#### Основные функции и решаемые задачи
+- запускает все плагины из папки "plugins", базируясь на имены (Имя файла плагина должно начинаться с "plugin_")
+- сохраняет настройки плагина в папке "options" в JSON формате для дальнейшего редактирования. 
+- отвечает за слияние настроек при изменении версии плагина:
+  - при изменении версии
+  - дефолтовые настройки будут слиты с уже имеющимися в options пользовательскими
+  - пользовательские будут иметь приоритет
+  - **крайне полезно**, когда вы добавляете новые настройки в плагин, т.к. сохраняются настройки, уже сделанные пользователем
 
-### Example usage
+jaa.py должен находится в корневой папке для корректного вычисления путей.
+
+(Дальше перевод неотредактирован)
+
+### Плагины
+* должны находиться в папке plugins/
+* (обычно) начинаются с префикса "plugin_"
+* ДОЛЖНЫ иметь функцию "start(core)", возвращающую манифест (словарь)
+* манифест ДОЛЖЕН содержать ключи "name" и "version"
+* манифест МОЖЕТ содержать "default_options"
+  * если содержит - настройки будут сохранены в папке "options", их можно отредактировать, и они будут загружены в следующий раз
+  * если содержит - "start_with_options(core,manifest)" функция будет запущена, причем манифест будет содержать ключ "options" (уже пользовательские настройки)
+* манифест будет обработан в функции "core.process_plugin_manifest". Если хотите - переопределите её.
+
+### Настройки (для плагинов)
+* сохраняются в папке "options" в JSON format
+* создаются при первом запуске плагина из "default_options"
+* обновляются, когда плагин изменяет "version" путем слияния
+"default_options" и options/<plugin>.json (последний - в приоритете) 
+
+### Пример использования
 ```
 from jaa import JaaCore
 
@@ -42,5 +56,5 @@ also can be run like
 
 main.init_plugins()
 ```
-### Requirements
+### Требования
 Python 3.5+ (due to dict mix in final_options calc), can be relaxed
