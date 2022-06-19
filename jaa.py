@@ -7,8 +7,6 @@ Main functions:
 - run all plugins files from "plugins" folder, base on filename
 - save each plugin options in "options" folder in JSON text files for further editing
 
-Must be in root folder due to plugin path calculation
-
 - Plugins
 must located in plugins/ folder
 must have "start(core)" function, that returns manifest dict
@@ -26,7 +24,7 @@ updated when plugin change "version"
 - Example usage:
 class VoiceAssCore(JaaCore): # class must override JaaCore
     def __init__(self):
-        JaaCore.__init__(self)
+        JaaCore.__init__(self,__file__)
   ...
 
 main = VoiceAssCore()
@@ -46,16 +44,27 @@ import os
 import traceback
 import json
 
-version = "1.5"
+# here we trying to use termcolor to highlight plugin info and errors during load
+try:
+    from termcolor2 import cprint
+except Exception as e:
+    # not found? making a stub!
+    def cprint(p,color=None):
+        if color == None:
+            print(p)
+        else:
+            print(str(color).upper(),p)
+
+version = "1.6"
 
 class JaaCore:
-    def __init__(self):
-
+    def __init__(self,root_file = __file__):
         self.jaaPluginPrefix = "plugin_"
         self.jaaVersion = version
-        self.jaaRootFolder = os.path.dirname(__file__)
+        self.jaaRootFolder = os.path.dirname(root_file)
         self.jaaOptionsPath = self.jaaRootFolder+os.path.sep+"options"
-        print("JAA.PY v{0} class created!".format(version))
+        self.jaaShowTracebackOnPluginErrors = False
+        cprint("JAA.PY v{0} class created!".format(version),"blue")
 
     # ------------- plugins -----------------
     def init_plugins(self, list_first_plugins = []):
@@ -84,14 +93,14 @@ class JaaCore:
         try:
             mod = self.import_plugin("plugins."+modname)
         except Exception as e:
-            print("JAA PLUGIN ERROR: {0} error on load: {1}".format(modname, str(e)))
+            self.print_error("JAA PLUGIN ERROR: {0} error on load: {1}".format(modname, str(e)))
             return False
 
         # run start function
         try:
             res = mod.start(self)
         except Exception as e:
-            print("JAA PLUGIN ERROR: {0} error on start: {1}".format(modname, str(e)))
+            self.print_error("JAA PLUGIN ERROR: {0} error on start: {1}".format(modname, str(e)))
             return False
 
         # if plugin has an options
@@ -101,8 +110,7 @@ class JaaCore:
                 saved_options = {}
                 try:
                     with open(self.jaaOptionsPath+'/'+modname+'.json', 'r', encoding="utf-8") as f:
-                        s = f.read(10000000)
-                        f.close()
+                        s = f.read()
                     saved_options = json.loads(s)
                     #print("Saved options", saved_options)
                 except Exception as e:
@@ -126,11 +134,11 @@ class JaaCore:
                     if res2 != None:
                         res = res2
                 except Exception as e:
-                    print("JAA PLUGIN ERROR: {0} error on start_with_options processing: {1}".format(modname, str(e)))
+                    self.print_error("JAA PLUGIN ERROR: {0} error on start_with_options processing: {1}".format(modname, str(e)))
                     return False
 
             except Exception as e:
-                print("JAA PLUGIN ERROR: {0} error on options processing: {1}".format(modname, str(e)))
+                self.print_error("JAA PLUGIN ERROR: {0} error on options processing: {1}".format(modname, str(e)))
                 return False
 
 
@@ -149,8 +157,16 @@ class JaaCore:
 
         self.plugin_manifests[modname] = res
 
-        print("JAA PLUGIN: {1} {2} ({0}) started!".format(modname, plugin_name, plugin_version))
+        self.on_succ_plugin_start(modname,plugin_name,plugin_version)
         return True
+
+    def on_succ_plugin_start(self, modname, plugin_name, plugin_version):
+        cprint("JAA PLUGIN: {1} {2} ({0}) started!".format(modname, plugin_name, plugin_version))
+
+    def print_error(self,p):
+        cprint(p,"red")
+        if self.jaaShowTracebackOnPluginErrors:
+            traceback.print_exc()
 
     def import_plugin(self, module_name):
         import sys

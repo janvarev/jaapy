@@ -7,7 +7,7 @@ All you need is root file "jaa.py"
 - run all plugins files from "plugins" folder, based on filename (Plugin filename must start with "plugin_")
 - save plugin options in "options" folder in JSON text files for further editing
 
-Must be in root folder due to plugin path calculation
+~~Must be in root folder due to plugin path calculation~~ (can be anywhere since 1.6)
 
 ### Plugins
 * must located in plugins/ folder
