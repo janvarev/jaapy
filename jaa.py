@@ -55,7 +55,7 @@ except Exception as e:
         else:
             print(str(color).upper(),p)
 
-version = "1.7"
+version = "1.7.1"
 
 class JaaCore:
     def __init__(self,root_file = __file__):
@@ -231,7 +231,7 @@ def load_options(options_file=None,py_file=None,default_options={}):
     hash = hashlib.md5((json.dumps(default_options, sort_keys=True)).encode('utf-8')).hexdigest()
 
     # 5. if no option file found or hash was from other default options
-    if len(saved_options) == 0 or saved_options["hash"] != hash:
+    if len(saved_options) == 0 or not ("hash" in saved_options.keys()) or saved_options["hash"] != hash:
         final_options["hash"] = hash
         #self.save_plugin_options(modname,final_options)
 
