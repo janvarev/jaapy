@@ -46,7 +46,7 @@ import json
 
 # here we trying to use termcolor to highlight plugin info and errors during load
 try:
-    from termcolor2 import cprint
+    from termcolor import cprint
 except Exception as e:
     # not found? making a stub!
     def cprint(p,color=None):
@@ -55,7 +55,7 @@ except Exception as e:
         else:
             print(str(color).upper(),p)
 
-version = "1.6"
+version = "1.7"
 
 class JaaCore:
     def __init__(self,root_file = __file__):
@@ -202,6 +202,46 @@ class JaaCore:
         if "options" in manifest:
             return manifest["options"]
         return None
+
+def load_options(options_file=None,py_file=None,default_options={}):
+    # 1. calculating options filename
+    if options_file == None:
+        if py_file == None:
+            raise Exception('JAA: Options or PY file is not defined, cant calc options filename')
+        else:
+            options_file = py_file[:-3]+'.json'
+
+    # 2. try to read saved options
+    saved_options = {}
+    try:
+        with open(options_file, 'r', encoding="utf-8") as f:
+            s = f.read()
+        saved_options = json.loads(s)
+        #print("Saved options", saved_options)
+    except Exception as e:
+        pass
+
+    # 3. calculating final options
+
+    # only string needs Python 3.5
+    final_options = {**default_options, **saved_options}
+
+    # 4. calculating hash from def options to check - is file rewrite needed?
+    import hashlib
+    hash = hashlib.md5((json.dumps(default_options, sort_keys=True)).encode('utf-8')).hexdigest()
+
+    # 5. if no option file found or hash was from other default options
+    if len(saved_options) == 0 or saved_options["hash"] != hash:
+        final_options["hash"] = hash
+        #self.save_plugin_options(modname,final_options)
+
+        # saving in file
+        str_options = json.dumps(final_options, sort_keys=True, indent=4, ensure_ascii=False)
+        with open(options_file, 'w', encoding="utf-8") as f:
+            f.write(str_options)
+            f.close()
+
+    return final_options
 
 """
 The MIT License (MIT)

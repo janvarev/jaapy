@@ -20,6 +20,29 @@ All you need is root file "jaa.py"
 
 ~~jaa.py должен находится в корневой папке для корректного вычисления путей.~~ (устарело с версии 1.6)
 
+**С версии 1.7**
+
+Предоставляет допфункцию load_options, которая делает идентичное слияние настроек, но
+для одного файла. Пример в `rundemojaa2file.py`
+
+```python
+from jaa import load_options
+
+default_options={
+    "pizza": "pepperoni",
+    "place": "New-York",
+}
+options = load_options(py_file=__file__,default_options=default_options)
+# alt way
+#options = load_options(options_file="rundemojaa2file.json",default_options=default_options)
+
+# опции теперь доступны для правки в rundemojaa2file.json
+
+print("Current options: deliver {0} pizza to {1}".format(options["pizza"],options["place"]))
+
+``` 
+
+
 ### Плагины
 * должны находиться в папке plugins/
 * (обычно) начинаются с префикса "plugin_"
