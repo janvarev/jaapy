@@ -42,6 +42,21 @@ print("Current options: deliver {0} pizza to {1}".format(options["pizza"],option
 
 ``` 
 
+**С версии 2.0**
+
+Предоставляет веб-интерфейс для управления настроками (требует установки gradio)
+
+Пример:
+```python
+if __name__ == "__main__":
+    cmd_core = VACore()
+    cmd_core.init_with_plugins()
+    print("Settings manager for VoiceAssistantCore.")
+
+    gr_int = cmd_core.gradio_render_settings_interface()
+    gr_int.launch()
+```
+
 
 ### Плагины
 * должны находиться в папке plugins/
