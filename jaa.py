@@ -54,7 +54,7 @@ except Exception as e:
         else:
             print(str(color).upper(),p)
 
-version = "2.2.0"
+version = "2.2.1"
 
 class JaaCore:
     def __init__(self, root_file = __file__):
