@@ -13,7 +13,7 @@ must have "start(core)" function, that returns manifest dict
 manifest must contain keys "name" and "version"
 can contain "default_options"
 - if contain - options will be saved in "options" folder and reload instead next time
-- if contain - "start_with_options(core,manifest)" function will run with manifest with "options" key
+- if contain - "start_with_options(core, manifest)" function will run with manifest with "options" key
 manifest will be processed in "process_plugin_manifest" function if you override it
 
 - Options (for plugins)
@@ -24,7 +24,7 @@ updated when plugin change "version"
 - Example usage:
 class VoiceAssCore(JaaCore): # class must override JaaCore
     def __init__(self):
-        JaaCore.__init__(self,__file__)
+        JaaCore.__init__(self, __file__)
   ...
 
 main = VoiceAssCore()
@@ -41,7 +41,6 @@ Python 3.5+ (due to dict mix in final_options calc), can be relaxed
 """
 
 import os
-import traceback
 import json
 
 # here we trying to use termcolor to highlight plugin info and errors during load
@@ -58,13 +57,13 @@ except Exception as e:
 version = "2.2.0"
 
 class JaaCore:
-    def __init__(self,root_file = __file__):
+    def __init__(self, root_file = __file__):
         self.jaaPluginPrefix = "plugin_"
         self.jaaVersion = version
         self.jaaRootFolder = os.path.dirname(root_file)
-        self.jaaOptionsPath = self.jaaRootFolder+os.path.sep+"options"
+        self.jaaOptionsPath = os.path.join(self.jaaRootFolder, "options")
         self.jaaShowTracebackOnPluginErrors = False
-        cprint("JAA.PY v{0} class created!".format(version),"blue")
+        cprint("JAA.PY v{0} class created!".format(version), "blue")
 
     # ------------- plugins -----------------
     def init_plugins(self, list_first_plugins = []):
@@ -75,10 +74,8 @@ class JaaCore:
             self.init_plugin(modname)
 
         # 2. run all plugins from plugins folder
-        from os import listdir
-        from os.path import isfile, join
-        pluginpath = self.jaaRootFolder+"/plugins"
-        files = [f for f in listdir(pluginpath) if isfile(join(pluginpath, f))]
+        pluginpath = os.path.join(self.jaaRootFolder, "plugins")
+        files = [f for f in os.listdir(pluginpath) if os.path.isfile(os.path.join(pluginpath, f))]
 
         for fil in files:
             # print fil[:-3]
@@ -88,7 +85,7 @@ class JaaCore:
 
 
 
-    def init_plugin(self,modname):
+    def init_plugin(self, modname):
         # import
         try:
             mod = self.import_plugin("plugins."+modname)
@@ -109,7 +106,7 @@ class JaaCore:
                 # saved options try to read
                 saved_options = {}
                 try:
-                    with open(self.jaaOptionsPath+'/'+modname+'.json', 'r', encoding="utf-8") as f:
+                    with open(os.path.join(self.jaaOptionsPath, modname+'.json'), 'r', encoding="utf-8") as f:
                         s = f.read()
                     saved_options = json.loads(s)
                     #print("Saved options", saved_options)
@@ -125,12 +122,12 @@ class JaaCore:
                 # if no option found or version is differ from mod version
                 if len(saved_options) == 0 or saved_options["v"] != res["version"]:
                     final_options["v"] = res["version"]
-                    self.save_plugin_options(modname,final_options)
+                    self.save_plugin_options(modname, final_options)
 
                 res["options"] = final_options
 
                 try:
-                    res2 = mod.start_with_options(self,res)
+                    res2 = mod.start_with_options(self, res)
                     if res2 != None:
                         res = res2
                 except Exception as e:
@@ -149,7 +146,7 @@ class JaaCore:
             plugin_version = res["version"]
 
 
-            self.process_plugin_manifest(modname,res)
+            self.process_plugin_manifest(modname, res)
 
         except Exception as e:
             print("JAA PLUGIN ERROR: {0} error on process startup options: {1}".format(modname, str(e)))
@@ -157,14 +154,15 @@ class JaaCore:
 
         self.plugin_manifests[modname] = res
 
-        self.on_succ_plugin_start(modname,plugin_name,plugin_version)
+        self.on_succ_plugin_start(modname, plugin_name, plugin_version)
         return True
 
     def on_succ_plugin_start(self, modname, plugin_name, plugin_version):
         cprint("JAA PLUGIN: {1} {2} ({0}) started!".format(modname, plugin_name, plugin_version))
 
-    def print_error(self,p):
-        cprint(p,"red")
+    def print_error(self, p):
+        import traceback
+        cprint(p, "red")
         if self.jaaShowTracebackOnPluginErrors:
             traceback.print_exc()
 
@@ -177,43 +175,42 @@ class JaaCore:
             return sys.modules[module_name]
         return None
 
-    def save_plugin_options(self,modname,options):
+    def save_plugin_options(self, modname, options):
         # check folder exists
         if not os.path.exists(self.jaaOptionsPath):
             os.makedirs(self.jaaOptionsPath)
 
         str_options = json.dumps(options, sort_keys=True, indent=4, ensure_ascii=False)
-        with open(self.jaaOptionsPath+'/'+modname+'.json', 'w', encoding="utf-8") as f:
+        with open(os.path.join(self.jaaOptionsPath, modname+'.json'), 'w', encoding="utf-8") as f:
             f.write(str_options)
             f.close()
 
     # process manifest must be overrided in inherit class
-    def process_plugin_manifest(self,modname,manifest):
+    def process_plugin_manifest(self, modname, manifest):
         print("JAA PLUGIN: {0} manifest dummy procession (override 'process_plugin_manifest' function)".format(modname))
         return
 
-    def plugin_manifest(self,pluginname):
+    def plugin_manifest(self, pluginname):
         if pluginname in self.plugin_manifests:
             return self.plugin_manifests[pluginname]
         return {}
 
-    def plugin_options(self,pluginname):
+    def plugin_options(self, pluginname):
         manifest = self.plugin_manifest(pluginname)
         if "options" in manifest:
             return manifest["options"]
         return None
 
     # ------------ gradio stuff --------------
-    def gradio_save(self,pluginname):
+    def gradio_save(self, pluginname):
         print("Saving options for {0}!".format(pluginname))
-        self.save_plugin_options(pluginname,self.plugin_options(pluginname))
+        self.save_plugin_options(pluginname, self.plugin_options(pluginname))
 
     def gradio_upd(self, pluginname, option, val):
         options = self.plugin_options(pluginname)
 
         # special case
         if isinstance(options[option], (list, dict)) and isinstance(val, str):
-            import json
             try:
                 options[option] = json.loads(val)
             except Exception as e:
@@ -221,9 +218,9 @@ class JaaCore:
                 pass
         else:
             options[option] = val
-        print(option,val,options)
+        print(option, val, options)
 
-    def gradio_render_settings_interface(self, title:str="Settings manager", required_fields_to_show_plugin:list=["default_options"]):
+    def gradio_render_settings_interface(self, title: str="Settings manager", required_fields_to_show_plugin: list=["default_options"]):
         import gradio as gr
 
         with gr.Blocks() as gr_interface:
@@ -242,7 +239,7 @@ class JaaCore:
 
                 if is_show_plugin:
                     with gr.Tab(pluginname):
-                        gr.Markdown("## {0} v{1}".format(manifest["name"],manifest["version"]))
+                        gr.Markdown("## {0} v{1}".format(manifest["name"], manifest["version"]))
                         if manifest.get("description") is not None:
                             gr.Markdown(manifest.get("description"))
 
@@ -268,14 +265,13 @@ class JaaCore:
 
 
                                         if isinstance(val, (bool, )):
-                                            gr_elem = gr.Checkbox(value=val,label=label)
-                                        elif isinstance(val, (dict,list)):
-                                            import json
-                                            gr_elem = gr.Textbox(value=json.dumps(val,ensure_ascii=False), label=label)
+                                            gr_elem = gr.Checkbox(value=val, label=label)
+                                        elif isinstance(val, (dict, list)):
+                                            gr_elem = gr.Textbox(value=json.dumps(val, ensure_ascii=False), label=label)
                                         else:
                                             gr_elem = gr.Textbox(value=val, label=label)
 
-                                        def handler(x,pluginname=pluginname,option=option):
+                                        def handler(x, pluginname=pluginname, option=option):
                                             self.gradio_upd(pluginname, option, x)
 
                                         gr_elem.change(handler, gr_elem, None)
@@ -283,14 +279,14 @@ class JaaCore:
                                 def handler_save(pluginname=pluginname):
                                     self.gradio_save(pluginname)
 
-                                text_button.click(handler_save,inputs=None,outputs=None)
+                                text_button.click(handler_save, inputs=None, outputs=None)
                         else:
                             gr.Markdown("_No options for this plugin_")
 
         return gr_interface
 
 
-def load_options(options_file=None,py_file=None,default_options={}):
+def load_options(options_file=None, py_file=None, default_options={}):
     # 1. calculating options filename
     if options_file == None:
         if py_file == None:
@@ -320,7 +316,7 @@ def load_options(options_file=None,py_file=None,default_options={}):
     # 5. if no option file found or hash was from other default options
     if len(saved_options) == 0 or not ("hash" in saved_options.keys()) or saved_options["hash"] != hash:
         final_options["hash"] = hash
-        #self.save_plugin_options(modname,final_options)
+        #self.save_plugin_options(modname, final_options)
 
         # saving in file
         str_options = json.dumps(final_options, sort_keys=True, indent=4, ensure_ascii=False)
@@ -334,18 +330,18 @@ def load_options(options_file=None,py_file=None,default_options={}):
 The MIT License (MIT)
 Copyright (c) 2021 Janvarev Vladislav
 
-Permission is hereby granted, free of charge, to any person obtaining a copy 
-of this software and associated documentation files (the “Software”), to deal 
-in the Software without restriction, including without limitation the rights to use, 
-copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, 
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the “Software”), to deal
+in the Software without restriction, including without limitation the rights to use,
+copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
 and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all copies or 
+The above copyright notice and this permission notice shall be included in all copies or
 substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
-INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR 
-PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE 
-FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, 
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
