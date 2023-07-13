@@ -3,6 +3,12 @@
 **Jaa.py** - minimalistic one-file plugin framework with no dependencies.
 All you need is root file "jaa.py"
 
+## Known usages
+
+- [Irene voice assistant (Russian)](https://github.com/janvarev/Irene-Voice-Assistant)
+- [OneRingTranslator](https://github.com/janvarev/OneRingTranslator) - Simple REST service to translate texts with plugins. Automatic calculate BLEU/COMET metrics of translation quality.
+- [chain-img-processor](https://github.com/janvarev/chain-img-processor) - Image/video processor with plugins
+
 [Continue in English](/README.EN.md)
 
 **Jaa.py** - минималистичный однофайловый плагинный фреймворк без зависимостей.
